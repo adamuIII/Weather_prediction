@@ -1,52 +1,60 @@
 import pandas as pd
-from sklearn import preprocessing
-from sklearn.preprocessing import PolynomialFeatures
-from sklearn.model_selection import train_test_split
-from sklearn import linear_model
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.linear_model import Ridge
+from sklearn.metrics import mean_squared_error
 
-weatherHistory = pd.read_csv("data\weatherHistory.csv")
-print(weatherHistory.head())
-print(weatherHistory.describe())
+weather = pd.read_csv("local_weather.csv", index_col="DATE")
+
+core_weather = weather[["PRCP", "SNOW", "SNWD", "TMAX", "TMIN"]].copy()
+core_weather.columns = ["precip", "snow", "snow_depth", "temp_max", "temp_min"]
 
 
-weatherFeatures = ["Humidity","ApparentTemperature(C)","WindSpeed(km/h)", 
-                   "WindBearing(degrees)","Visibility(km)","Pressure(millibars)"]
 
-x = weatherHistory[weatherFeatures]
-y = weatherHistory.TemperatureC
-
-x_scaled = preprocessing.scale(x)
-poly = PolynomialFeatures(7)
-
-x_final = poly.fit_transform(x_scaled)
-
-x_train,x_test,y_train,y_test = train_test_split(x_final,y,test_size=0.10,random_state = 42)
+#porównanie temperatur na przestrzeni lat min i max
+core_weather[["temp_max", "temp_min"]].plot()
 
 
-regr = linear_model.Ridge(alpha = 0.5)
-regr.fit(x_train, y_train)
+#wyswietlenie opadow
+core_weather["precip"].plot()
 
-y_pred = regr.predict(x_test)
 
-print(y_pred)
+#tworzymy kolumne z przewidywana pogoda
+#shift(-1) cofa nam max temp o jeden do targetu dzieki temu targetem jest jutrzejsza temperatura
+#jesli we wtorek temp wynosi 30 to taki jest target w poniedzialek
+core_weather["target"] = core_weather.shift(-1)["temp_max"]
+#wyłączamy ostatni bo nie ma z czego pobierać
+core_weather = core_weather.iloc[:-1,:].copy()
 
-print("mean-squared-error: %.3f"% mean_squared_error(y_test,y_pred))
-print("coeffecient of determination: %.3f" % r2_score(y_test, y_pred))
 
-print("intercept: ", regr.intercept_)
-print("coeffecients: ", len(regr.coef_))
+#zaczynamy machine learning Regresja grzbietowa
+reg = Ridge(alpha=.1)
 
-wilgotnosc =  float(input("Podaj wilgotnosc"))
-tempOdczuwalna =  float(input("Podaj temp odczuwalna"))
-wiatr =  float(input("Podaj predkosc wiatru"))
-wiatrKierunek =  float(input("Podaj kierunek wiatru w stopniach"))
-widocznosc = float(input("Podaj widocznosc w km"))
-cisnienie = float(input("Podaj cisnienie"))
+#do przewidywania używamy opadów, temp max i temp min
+predictors = ["precip", "temp_max", "temp_min"]
+#dane uczace
+train = core_weather.loc[:"2020-12-31"]
+#dane testowe
+test = core_weather.loc["2021-01-01":]
+train
 
-weatherObs = [[wilgotnosc,tempOdczuwalna,wiatr,wiatrKierunek,widocznosc,cisnienie]]
-weatherObs_scaled = preprocessing.scale(weatherObs)
-weatherObs_final = poly.fit_transform(weatherObs_scaled)
+test
 
-y_pred = regr.predict(weatherObs_final)
-print(y_pred)
+
+reg.fit(train[predictors], train["target"])
+predictions = reg.predict(test[predictors])
+
+
+
+#sredni blad bezwzgledny
+mean_squared_error(test["target"], predictions)
+
+#predykcje
+combined = pd.concat([test["target"], pd.Series(predictions, index=test.index)], axis=1)
+combined.columns = ["actual", "predictions"]
+combined
+
+#predykcje na grafie
+combined.plot()
+
+
+#wplyw poszczegolnych danych na temperature
+reg.coef_
