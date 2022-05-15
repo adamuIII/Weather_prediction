@@ -7,6 +7,31 @@ weather = pd.read_csv("local_weather.csv", index_col="DATE")
 core_weather = weather[["PRCP", "SNOW", "SNWD", "TMAX", "TMIN"]].copy()
 core_weather.columns = ["precip", "snow", "snow_depth", "temp_max", "temp_min"]
 
+weather.apply(pd.isnull).sum()/weather.shape[0]
+core_weather.apply(pd.isnull).sum()
+core_weather["snow"].value_counts()
+core_weather["snow_depth"].value_counts()
+del core_weather["snow"]
+del core_weather["snow_depth"]
+core_weather[pd.isnull(core_weather["precip"])]
+core_weather.loc["2013-12-15",:]
+core_weather["precip"].value_counts() / core_weather.shape[0]
+core_weather["precip"] = core_weather["precip"].fillna(0)
+core_weather.apply(pd.isnull).sum()
+core_weather[pd.isnull(core_weather["temp_min"])]
+core_weather.loc["2011-12-18":"2011-12-28"]
+core_weather = core_weather.fillna(method="ffill")
+core_weather.apply(pd.isnull).sum()
+core_weather.apply(lambda x: (x == 9999).sum())
+core_weather.dtypes
+core_weather.index
+core_weather.index = pd.to_datetime(core_weather.index)
+core_weather.index
+core_weather.index.year
+
+core_weather["temp_max"] = round(5/9 * (core_weather["temp_max"] - 32), 1)
+core_weather["temp_min"] = round(5/9 * (core_weather["temp_min"] - 32), 1)
+
 
 
 #porównanie temperatur na przestrzeni lat min i max
