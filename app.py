@@ -35,7 +35,8 @@ core_weather["temp_min"] = round(5/9 * (core_weather["temp_min"] - 32), 1)
 
 
 #porównanie temperatur na przestrzeni lat min i max
-core_weather[["temp_max", "temp_min"]].plot()
+fig = core_weather[["temp_max", "temp_min"]].plot().get_figure()
+fig.savefig("comparasion.png")
 
 
 #wyswietlenie opadow
@@ -75,10 +76,11 @@ mean_squared_error(test["target"], predictions)
 #predykcje
 combined = pd.concat([test["target"], pd.Series(predictions, index=test.index)], axis=1)
 combined.columns = ["actual", "predictions"]
-combined
+combined.head()
 
 #predykcje na grafie
-combined.plot()
+fig = combined.plot().get_figure()
+fig.savefig('predictions.png')
 
 
 #wplyw poszczegolnych danych na temperature
