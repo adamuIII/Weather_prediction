@@ -87,6 +87,15 @@ def predict_weather():
 
     #wplyw poszczegolnych danych na temperature
     reg.coef_
+    
+
+
+    result = {"actual":core_weather[-1:].temp_max.iloc[0],
+            "predicted":round(combined[-1:].predictions.iloc[0],1),
+            "date":str(core_weather.index[-1])
+            }
+    
+    return result
 
 if __name__ == "__main__":
     predict_weather()
