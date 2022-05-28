@@ -4,7 +4,7 @@ from sklearn.metrics import mean_squared_error
 
 
 def predict_weather():
-    weather = pd.read_csv("local_weather.csv", index_col="DATE")
+    weather = pd.read_csv("predictions/static/predictions/local_weather.csv", index_col="DATE")
 
     core_weather = weather[["PRCP", "SNOW", "SNWD", "TMAX", "TMIN"]].copy()
     core_weather.columns = ["precip", "snow", "snow_depth", "temp_max", "temp_min"]
